@@ -48,7 +48,7 @@ const ScrollPage = () => {
             style={{ height: '400px', overflowY: 'auto' }}
         >
             {userList?.map((data: any, index: any) => (
-                <div key={index}> {/* Adding a key prop for list items */}
+                <div key={index}>
                     <p>{data.name}</p>
                     <img src={data.airline[0].logo} />
                 </div>
