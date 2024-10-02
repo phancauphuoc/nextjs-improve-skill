@@ -3,23 +3,29 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { apiScrollPageThree } from './api'
 
 const ScrollPageThreePage = () => {
-    const [listDataPage, setListDataPage] = useState<any>([]);
+    const [listDataPage, setListDataPage] = useState<any[]>([]);
     const loadingRef = useRef(null);
     const [page, setPage] = useState<number>(1);
+    const [isFetching, setIsFetching] = useState<boolean>(false);
 
     const getListData = async (page: number) => {
-        const dataPage = await apiScrollPageThree.getDataScrollPageThree(page);
-        console.log('data', dataPage);
-        setListDataPage((prevState: any) => [...prevState, ...dataPage]);
-    }
+        setIsFetching(true);
+        try {
+            const dataPage = await apiScrollPageThree.getDataScrollPageThree(page);
+            setListDataPage((prevState) => [...prevState, ...dataPage]);
+        } catch (error) {
+            console.error('Failed to load data:', error);
+        } finally {
+            setIsFetching(false);
+        }
+    };
 
     const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
         const [target] = entries;
-        console.log('target', target);
-        if (target.isIntersecting) {
+        if (target.isIntersecting && !isFetching) {
             setPage((prev) => prev + 1);
         }
-    }, []);
+    }, [isFetching]);
 
     useEffect(() => {
         getListData(page);
@@ -30,8 +36,7 @@ const ScrollPageThreePage = () => {
             root: null,
             rootMargin: '10px',
             threshold: 0.5,
-        }
-        console.log('loadingRef.current', loadingRef.current);
+        };
         const observer = new IntersectionObserver(handleObserver, options);
         if (loadingRef.current) {
             observer.observe(loadingRef.current);
@@ -41,23 +46,22 @@ const ScrollPageThreePage = () => {
                 observer.unobserve(loadingRef.current);
             }
         };
-    }, [handleObserver]);
+    }, [handleObserver, loadingRef]);
 
     return (
         <>
-            {listDataPage?.map((data: any, index: number) => {
-                return (
-                    <div key={index} style={{ margin: '5px', width: '100%', backgroundColor: '#bdb6b6', borderRadius: '20px', paddingBottom: '1px' }}>
-                        <img style={{ width: '100%' }} alt={data.author} src={data.download_url} />
-                        <p style={{ marginLeft: '5px' }}>{data.author}</p>
-                    </div>
-                );
-            })}
+            {listDataPage.map((data, index) => (
+                <div key={index} style={{ margin: '5px', width: '100%', backgroundColor: '#bdb6b6', borderRadius: '20px', paddingBottom: '1px' }}>
+                    <img style={{ width: '100%' }} alt={data.author} src={data.download_url} />
+                    <p style={{ marginLeft: '5px' }}>{data.author}</p>
+                </div>
+            ))}
             <div ref={loadingRef} style={{ height: '20px', backgroundColor: 'red' }}>
                 loading...
             </div>
         </>
-    )
-}
+    );
+};
+
 
 export default ScrollPageThreePage
